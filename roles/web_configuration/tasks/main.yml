@@ -1,0 +1,16 @@
+- name: install nginx
+  command: amazon-linux-extras install -y nginx1
+
+- name: create html file
+  copy:
+    dest: /usr/share/nginx/html/index.html
+    src: files/index.html
+    owner: root
+    group: root
+    mode: 0644
+
+- name: start and enable nginx
+  service:
+    name: nginx
+    enabled: true
+    state: started

@@ -1,0 +1,21 @@
+- name: create web instance
+  hosts: localhost
+  gather_facts: false
+  vars:
+    keypair: csa-lab
+    instance_type: t2.nano
+    security_group: csa-secgroup
+    image: ami-047a51fa27710816e
+    region: us-east-1
+    vpc_id: vpc-045facce53a63a587
+    vpc_subnet_id: subnet-001cb8c57a6958b72
+  roles:
+    - create_instance
+
+- name: install nginx and configure
+  hosts: launched
+  user: ec2-user
+  become: true
+  gather_facts: false
+  roles:
+    - web_configuration

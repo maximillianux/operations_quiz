@@ -1,0 +1,40 @@
+- name: create security group
+  amazon.aws.ec2_group:
+    name: "{{ security_group }}"
+    description: sg for ops quiz
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+          - 80
+          - 443
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all on port 22, 80, 443
+- name: Launch web instance
+  amazon.aws.ec2:
+     key_name: "{{ keypair }}"
+     group: "{{ security_group }}"
+     instance_type: "{{ instance_type }}"
+     instance_tags:
+       web: nginx
+     image: "{{ image }}"
+     wait: true
+     region: "{{ region }}"
+     vpc_subnet_id: "{{ vpc_subnet_id }}"
+     assign_public_ip: yes
+  register: ec2
+
+- name: Add new instance to host group
+  add_host:
+    hostname: "{{ item.public_ip }}"
+    groupname: launched
+  loop: "{{ ec2.instances }}"
+
+- name: Wait for SSH to come up
+  delegate_to: "{{ item.public_dns_name }}"
+  wait_for_connection:
+    delay: 30
+    timeout: 300
+  loop: "{{ ec2.instances }}"
